@@ -12,6 +12,7 @@ from datetime import datetime
 from functools import wraps
 import traceback
 import time
+from bert_handler import BERTHandler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +25,10 @@ app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 TFIDF_MODEL_PATH = 'model/passmodel.pkl'
 TFIDF_VECTORIZER_PATH = 'model/tfidfvectorizer.pkl'
 DATA_PATH = 'data/drugsComTrain_raw.tsv' 
+
+BERT_MODEL_PATH = 'model/distilbert-drug-review-model'
+BERT_TOKENIZER_PATH = 'model/distilbert-drug-review-tokenizer'
+BERT_LABEL_ENCODER_PATH = 'model/label_encoder.pkl'
 
 # User credentials
 USERS = {
@@ -38,6 +43,7 @@ tfidf_vectorizer = None
 lemmatizer = None
 stop_words = None
 data_df = None
+bert_handler = None
 
 def initialize_nltk():
     """Initialize NLTK components"""
@@ -52,12 +58,12 @@ def initialize_nltk():
         return False
 
 def load_models():
-    """Load TF-IDF model and data"""
-    global tfidf_model, tfidf_vectorizer, data_df
+    """Load all available models"""
+    global tfidf_model, tfidf_vectorizer, data_df, bert_handler
     
-    models_loaded = {'tfidf': False}
+    models_loaded = {'tfidf': False, 'bert': False}
     
-    # Try to load TF-IDF model
+    # Load TF-IDF model (existing code)
     try:
         if (os.path.exists(TFIDF_MODEL_PATH) and 
             os.path.exists(TFIDF_VECTORIZER_PATH)):
@@ -71,6 +77,13 @@ def load_models():
             logger.warning("TF-IDF model files not found")
     except Exception as e:
         logger.error(f"Error loading TF-IDF model: {str(e)}")
+    
+    try:
+        bert_handler = BERTHandler(BERT_MODEL_PATH, BERT_TOKENIZER_PATH, BERT_LABEL_ENCODER_PATH)
+        if bert_handler.load_models():
+            models_loaded['bert'] = True
+    except Exception as e:
+        logger.error(f"Error initializing BERT handler: {str(e)}")
     
     # Load data
     try:
@@ -86,6 +99,19 @@ def load_models():
         logger.error(f"Error loading data: {str(e)}")
     
     return models_loaded
+
+
+def predict_with_bert(text):
+    """Predict using BERT model"""
+    try:
+        if bert_handler is None or not bert_handler.is_available():
+            return None, 0.0, "BERT model not available"
+        
+        return bert_handler.predict(text, clean_text)
+        
+    except Exception as e:
+        logger.error(f"BERT prediction error: {str(e)}")
+        return None, 0.0, str(e)
 
 def login_required(f):
     """Decorator to require login"""
@@ -253,8 +279,15 @@ def login_validation():
 @login_required
 def index():
     """Home page"""
-    return render_template('home.html', user_id=session.get('user_id'))
+    models_status = {
+        'bert_available': bert_handler and bert_handler.is_available(),
+        'tfidf_available': tfidf_model is not None
+    }
+    return render_template('home.html', 
+                         user_id=session.get('user_id'),
+                         models_status=models_status)
 
+# Keep only the BERT prediction function, remove TF-IDF as fallback only
 @app.route('/predict', methods=['GET', 'POST'])
 @login_required
 def predict():
@@ -274,9 +307,17 @@ def predict():
             # Record start time
             start_time = time.time()
             
-            # Use TF-IDF model
-            condition, confidence, error = predict_with_tfidf(raw_text)
-            model_used = 'TF-IDF + Passive Aggressive'
+            # Use BERT as primary model
+            if bert_handler and bert_handler.is_available():
+                condition, confidence, error = predict_with_bert(raw_text)
+                model_used = 'BERT (DistilBERT)'
+            elif tfidf_model is not None:
+                # TF-IDF as fallback only
+                condition, confidence, error = predict_with_tfidf(raw_text)
+                model_used = 'TF-IDF (Fallback)'
+            else:
+                flash('No prediction models available.', 'error')
+                return render_template('predict.html')
             
             # Record end time
             prediction_time = round(time.time() - start_time, 3)
@@ -306,7 +347,6 @@ def predict():
             
         except Exception as e:
             logger.error(f"Prediction error: {str(e)}")
-            logger.error(traceback.format_exc())
             flash('An error occurred during prediction.', 'error')
             return render_template('predict.html')
     
@@ -385,24 +425,19 @@ if __name__ == "__main__":
     # Load models
     models_loaded = load_models()
     
-    if not models_loaded['tfidf']:
-        logger.error("TF-IDF model could not be loaded!")
-        print("\n" + "="*60)
-        print("⚠️  TF-IDF MODEL NOT FOUND!")
-        print("="*60)
-        print("Please ensure you have:")
-        print("   - passmodel.pkl")
-        print("   - tfidfvectorizer.pkl")
-        print("="*60)
+    if not any(models_loaded.values()):
+        logger.error("No models could be loaded!")
         exit(1)
     
-    # Print status
+    # Update the status display to focus on BERT
     print("\n" + "="*60)
-    print("🚀 TF-IDF MODEL LOADED SUCCESSFULLY!")
+    print("MEDICAL CONDITION PREDICTOR LOADED!")
     print("="*60)
-    print("TF-IDF Model: ✅ Available")
-    print("Data loaded: ✅ Available" if data_df is not None else "❌ Not Available")
+    print(f"Primary Model: {'BERT (DistilBERT) ✅' if models_loaded.get('bert', False) else 'TF-IDF (Fallback) ✅'}")
+    print(f"Dataset: {'161K+ Medical Records ✅' if data_df is not None else 'Not Available ❌'}")
+    print(f"Processing: {'GPU Accelerated' if torch.cuda.is_available() else 'CPU Processing'}")
     print("="*60)
+    print("Ready for high-accuracy medical condition prediction!")
     
     # Run the application
     app.run(debug=True, host="localhost", port=8080, use_reloader=False)
