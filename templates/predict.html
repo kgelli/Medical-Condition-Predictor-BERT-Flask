@@ -157,6 +157,8 @@
             background: linear-gradient(90deg, #ff6b6b, #feca57, #48cab3);
             border-radius: 10px;
             transition: width 1s ease;
+            min-width: 0%;
+            max-width: 100%; 
         }
 
         .text-review {
@@ -240,6 +242,8 @@
             margin-bottom: 0;
         }
 
+        
+
         .character-count {
             font-size: 0.9rem;
             color: #6c757d;
@@ -282,6 +286,17 @@
         }
     </style>
 </head>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fills = document.querySelectorAll('.confidence-fill[data-confidence]');
+    fills.forEach(fill => {
+        const confidence = fill.getAttribute('data-confidence');
+        fill.style.width = confidence + '%';
+    });
+});
+</script>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-custom">
@@ -391,7 +406,7 @@
                                 
                                 {% if confidence and confidence > 50 %}
                                 <div class="confidence-bar">
-                                    <div class="confidence-fill" style="width: {{ confidence }}%"></div>
+                                   <div class="confidence-fill" data-confidence="{{ confidence|default(0) }}%;"></div>
                                 </div>
                                 
                                 <div class="result-details">
@@ -686,6 +701,7 @@
                 }, 500);
             }
         });
+        
 
         // Add hover effects to drug recommendations
         document.querySelectorAll('.drug-recommendation').forEach(card => {

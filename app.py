@@ -239,6 +239,7 @@ def get_top_drugs(condition, min_rating=8.0, min_useful_count=50):
     except Exception as e:
         logger.error(f"Error getting top drugs: {str(e)}")
         return []
+
 # Routes
 @app.route('/')
 def login():
@@ -288,7 +289,6 @@ def index():
                          user_id=session.get('user_id'),
                          models_status=models_status)
 
-# Keep only the BERT prediction function, remove TF-IDF as fallback only
 @app.route('/predict', methods=['GET', 'POST'])
 @login_required
 def predict():
@@ -357,15 +357,75 @@ def predict():
 def health_check():
     """Health check endpoint"""
     try:
+        # Check system resources
+        import psutil
+        memory_info = psutil.virtual_memory()
+        
+        # Check GPU availability
+        gpu_available = torch.cuda.is_available()
+        gpu_info = None
+        if gpu_available:
+            gpu_info = {
+                'device_count': torch.cuda.device_count(),
+                'current_device': torch.cuda.current_device(),
+                'device_name': torch.cuda.get_device_name(0) if torch.cuda.device_count() > 0 else 'Unknown'
+            }
+        
+        # Model status
+        bert_status = bert_handler and bert_handler.is_available()
+        tfidf_status = tfidf_model is not None
+        data_status = data_df is not None
+        
+        # Overall health
+        overall_health = 'healthy' if (bert_status or tfidf_status) and data_status else 'degraded'
+        
         return jsonify({
-            'status': 'healthy',
-            'message': 'TF-IDF model operational',
+            'status': overall_health,
             'timestamp': datetime.now().isoformat(),
-            'tfidf_loaded': tfidf_model is not None,
-            'data_loaded': data_df is not None
+            'models': {
+                'bert_available': bert_status,
+                'tfidf_available': tfidf_status,
+                'primary_model': 'BERT' if bert_status else 'TF-IDF' if tfidf_status else 'None'
+            },
+            'data': {
+                'dataset_loaded': data_status,
+                'record_count': len(data_df) if data_df is not None else 0
+            },
+            'system': {
+                'memory_usage_percent': memory_info.percent,
+                'memory_available_gb': round(memory_info.available / (1024**3), 2),
+                'gpu_available': gpu_available,
+                'gpu_info': gpu_info
+            },
+            'nltk_initialized': lemmatizer is not None and stop_words is not None
+        })
+        
+    except ImportError:
+        # Fallback if psutil is not available
+        return jsonify({
+            'status': 'healthy' if (bert_handler and bert_handler.is_available()) or tfidf_model is not None else 'degraded',
+            'timestamp': datetime.now().isoformat(),
+            'models': {
+                'bert_available': bert_handler and bert_handler.is_available(),
+                'tfidf_available': tfidf_model is not None,
+                'primary_model': 'BERT' if bert_handler and bert_handler.is_available() else 'TF-IDF' if tfidf_model is not None else 'None'
+            },
+            'data': {
+                'dataset_loaded': data_df is not None,
+                'record_count': len(data_df) if data_df is not None else 0
+            },
+            'system': {
+                'gpu_available': torch.cuda.is_available(),
+                'memory_info': 'psutil not available'
+            },
+            'nltk_initialized': lemmatizer is not None and stop_words is not None
         })
     except Exception as e:
-        return jsonify({'status': 'unhealthy', 'message': str(e)}), 503
+        return jsonify({
+            'status': 'unhealthy', 
+            'message': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 503
 
 @app.route('/api/reviews', methods=['POST'])
 @login_required
