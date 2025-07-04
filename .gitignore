@@ -10,6 +10,10 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Version files
+*.version
+[0-9]*.[0-9]*.[0-9]*
+
 # IDE
 .vscode/
 .idea/
