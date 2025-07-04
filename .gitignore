@@ -16,7 +16,6 @@ pip-delete-this-directory.txt
 *.swp
 *.swo
 *~
-0.26.0
 
 # OS
 .DS_Store
@@ -39,14 +38,3 @@ results/
 checkpoint-*/
 *.backup
 app_backup.py
-
-# Large data files (optional - you can include them if needed)
-# *.csv
-# *.tsv
-
-
-# Large BERT model files (>100MB)
-model/distilbert-drug-review-model/pytorch_model.bin
-model/distilbert-drug-review-model/model.safetensors
-model/distilbert-drug-review-model/*.bin
-model/distilbert-drug-review-tokenizer/*.bin
