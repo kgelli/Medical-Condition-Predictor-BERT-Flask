@@ -29,7 +29,7 @@ DATA_PATH = 'data/drugsComTrain_raw.tsv'
 
 BERT_MODEL_PATH = 'model/distilbert-drug-review-model'
 BERT_TOKENIZER_PATH = 'model/distilbert-drug-review-tokenizer'
-BERT_LABEL_ENCODER_PATH = 'model/label_encoder.pkl'
+BERT_LABEL_ENCODER_PATH = 'model/label_encoder_fixed.pkl'
 
 # User credentials
 USERS = {

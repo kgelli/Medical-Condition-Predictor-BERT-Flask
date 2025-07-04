@@ -26,6 +26,14 @@ class BERTHandler:
                 logger.warning("BERT model directory not found")
                 return False
             
+            safetensors_path = os.path.join(self.model_path, 'model.safetensors')
+            pytorch_path = os.path.join(self.model_path, 'pytorch_model.bin')
+            
+            if os.path.exists(safetensors_path):
+                logger.info(f"✅ Found model.safetensors: {safetensors_path}")
+            if os.path.exists(pytorch_path):
+                logger.info(f"✅ Found pytorch_model.bin: {pytorch_path}")
+            
             if not os.path.exists(self.label_encoder_path):
                 logger.warning("BERT label encoder not found")
                 return False
@@ -35,6 +43,10 @@ class BERTHandler:
             self.model = DistilBertForSequenceClassification.from_pretrained(self.model_path)
             self.tokenizer = DistilBertTokenizer.from_pretrained(self.tokenizer_path)
             self.label_encoder = joblib.load(self.label_encoder_path)
+
+            logger.info("✅ BERT model loaded successfully!")
+            logger.info(f"Model type: {type(self.model).__name__}")
+            logger.info(f"Model config: {self.model.config.name_or_path}")
             
             self.is_loaded = True
             logger.info("BERT model loaded successfully!")
