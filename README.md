@@ -57,20 +57,45 @@ An AI-powered web application that predicts medical conditions from patient-desc
 - Python 3.8+
 - pip package manager
 - 4GB+ RAM (for BERT model)
+- Git LFS (for large model files)
 
 ### Installation Steps
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Ensure model files are present in `model/` directory
-4. Run the application: `python app.py`
-5. Access at `http://localhost:8080`
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   cd YOUR_REPO_NAME
+   ```
 
-### Model Files Required
-- `model/distilbert-drug-review-model/` - Fine-tuned BERT model
+2. **Install Git LFS (if not already installed):**
+   ```bash
+   git lfs install
+   ```
+
+3. **Pull LFS files:**
+   ```bash
+   git lfs pull
+   ```
+
+4. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Run the application:**
+   ```bash
+   python app.py
+   ```
+
+6. **Access the application:**
+   Open your browser and navigate to `http://localhost:8080`
+
+### Model Files (Included via Git LFS)
+- `model/distilbert-drug-review-model/` - Fine-tuned BERT model (256MB)
 - `model/distilbert-drug-review-tokenizer/` - BERT tokenizer
 - `model/label_encoder.pkl` - Label encoder for condition mapping
 - `model/passmodel.pkl` - Fallback TF-IDF model
 - `model/tfidfvectorizer.pkl` - TF-IDF vectorizer
+- `data/drugsComTrain.csv` - Training dataset (80MB+)
 
 ## User Interface Features
 - **Professional Medical Styling** with healthcare-appropriate color schemes
@@ -100,12 +125,33 @@ This Master's Capstone Project demonstrates:
 - **API Integration** for external medical databases
 - **Multi-language Support** for broader accessibility
 
-## File Structure Note
-Due to GitHub file size limitations, some large files are not included in this repository:
-- Model files (256 MB BERT model)
+## Repository Structure
+```
+├── app.py                          # Main Flask application
+├── bert_diagnostic.py              # BERT model diagnostic utilities
+├── bert_handler.py                 # BERT model handling logic
+├── recreate_label_encoder.py       # Label encoder recreation script
+├── requirements.txt                # Python dependencies
+├── model/                          # Machine learning models (Git LFS)
+│   ├── distilbert-drug-review-model/
+│   ├── distilbert-drug-review-tokenizer/
+│   └── *.pkl                       # Serialized models
+├── data/                           # Training datasets (Git LFS)
+│   └── drugsComTrain.csv
+├── templates/                      # HTML templates
+│   ├── home.html
+│   ├── login.html
+│   └── predict.html
+└── logs/                           # Application logs
+```
 
-The complete working version is available in the local development environment.
-All application code and architecture are preserved in this repository.
+## Git LFS Usage
+This repository uses Git LFS (Large File Storage) to handle large model files and datasets. The following file types are tracked with LFS:
+- `*.bin` - PyTorch model binaries
+- `*.safetensors` - Model tensors
+- `*.pkl` - Serialized Python objects
+- `*.csv` - Large datasets
+- `*.tsv` - Tab-separated data files
 
 ## License
 Academic project for educational purposes only. Not intended for commercial medical use.
