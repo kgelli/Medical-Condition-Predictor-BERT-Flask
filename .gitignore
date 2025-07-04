@@ -16,6 +16,7 @@ pip-delete-this-directory.txt
 *.swp
 *.swo
 *~
+0.26.0
 
 # OS
 .DS_Store
@@ -46,5 +47,6 @@ app_backup.py
 
 # Large BERT model files (>100MB)
 model/distilbert-drug-review-model/pytorch_model.bin
+model/distilbert-drug-review-model/model.safetensors
 model/distilbert-drug-review-model/*.bin
 model/distilbert-drug-review-tokenizer/*.bin
