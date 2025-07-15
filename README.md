@@ -2,7 +2,7 @@
 
 ## Master's Capstone Project
 **Student:** Kusal Venkata Sai Shravanth Gelli  
-**Project Advisor:** Dr. Anu Bourgeous  
+**Project Advisor:** Dr. Anu Bourgeois  
 **Institution:** Georgia State University  
 
 ## Project Overview
@@ -157,7 +157,7 @@ This repository uses Git LFS (Large File Storage) to handle large model files an
 Academic project for educational purposes only. Not intended for commercial medical use.
 
 ## Acknowledgments
-Special thanks to Dr. Anu Bourgeous for invaluable guidance and support throughout this Master's Capstone Project. This work represents the culmination of advanced study in Machine Learning and Natural Language Processing applied to healthcare informatics.
+Special thanks to Dr. Anu Bourgeois for invaluable guidance and support throughout this Master's Capstone Project. This work represents the culmination of advanced study in Machine Learning and Natural Language Processing applied to healthcare informatics.
 
 ---
 
